@@ -1,5 +1,6 @@
 #include "crawler.h"
 #include "engine.h"
+#include "matcher.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,9 +39,17 @@ int crawl_directory(SearchIndex *idx, const char *dir_path, int max_depth) {
         added_count += crawl_directory(idx, full_path, max_depth - 1);
       }
     }
-    // if it is a regular file, we add it to the search index
+    // if it is a regular file, check if it's an App or a File
     else if (S_ISREG(st.st_mode)) {
-      index_add(idx, entry->d_name, full_path, "File");
+      const char *ext = strrchr(entry->d_name, '.');
+      const char *category = "File";
+
+      if (ext && (str_contains_ignore_case(ext, ".lnk") ||
+                  str_contains_ignore_case(ext, ".exe"))) {
+        category = "App";
+      }
+
+      index_add(idx, entry->d_name, full_path, category);
       added_count++;
     }
   }
