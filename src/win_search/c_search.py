@@ -62,12 +62,12 @@ class CSearchEngine(SearchEngine):
             (os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs"), 3),
 
             # 2. Desktops (User & Public)
-            (os.path.expandvars(r"%USERPROFILE%\Desktop"), 2),
+            (os.path.expandvars(r"%USERPROFILE%\Desktop"), 7),
             (r"C:\Users\Public\Desktop", 2),
 
             # 3. User Folders (Documents & Downloads)
-            (os.path.expandvars(r"%USERPROFILE%\Documents"), 2),
-            (os.path.expandvars(r"%USERPROFILE%\Downloads"), 1),
+            (os.path.expandvars(r"%USERPROFILE%\Documents"), 6),
+            (os.path.expandvars(r"%USERPROFILE%\Downloads"), 2),
         ]
 
         total = 0

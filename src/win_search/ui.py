@@ -55,13 +55,13 @@ class SearchUI:
         self.root.attributes("-topmost", True)     # Float above all windows
         self.root.configure(bg=self.BG_COLOR)
 
-        # Scaled geometry: wider to display full paths comfortably
-        width = int(880 * self.scale)
-        height = int(450 * self.scale)
+        # Scaled geometry: wider (1050px base) to display full paths comfortably
+        width = int(1050 * self.scale)
+        height = int(470 * self.scale)
         screen_w = self.root.winfo_screenwidth()
         screen_h = self.root.winfo_screenheight()
         x = (screen_w - width) // 2
-        y = int(screen_h * 0.20)
+        y = int(screen_h * 0.18)
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
     def _create_widgets(self) -> None:
@@ -79,14 +79,14 @@ class SearchUI:
         self.outer_frame.pack(fill=tk.BOTH, expand=True)
 
         # Search Input Container
-        search_container = tk.Frame(self.outer_frame, bg=self.INPUT_BG, padx=pad_x, pady=int(9 * self.scale))
+        search_container = tk.Frame(self.outer_frame, bg=self.INPUT_BG, padx=pad_x, pady=int(8 * self.scale))
         search_container.pack(fill=tk.X, padx=pad_x, pady=(pad_y, int(6 * self.scale)))
 
         # Search Icon Label
         self.icon_label = tk.Label(
             search_container,
             text="🔍",
-            font=("Segoe UI", max(11, int(12 * self.scale))),
+            font=("Segoe UI", max(10, int(11 * self.scale))),
             bg=self.INPUT_BG,
             fg=self.MUTED_COLOR
         )
@@ -99,7 +99,7 @@ class SearchUI:
         self.entry = tk.Entry(
             search_container,
             textvariable=self.query_var,
-            font=("Segoe UI", max(13, int(14 * self.scale))),
+            font=("Segoe UI", max(12, int(13 * self.scale))),
             bg=self.INPUT_BG,
             fg=self.FG_COLOR,
             insertbackground=self.ACCENT_COLOR,
@@ -112,10 +112,10 @@ class SearchUI:
         divider = tk.Frame(self.outer_frame, bg=self.BORDER_COLOR, height=1)
         divider.pack(fill=tk.X, padx=pad_x, pady=int(6 * self.scale))
 
-        # Results Listbox
+        # Results Listbox: refined compact font for displaying long paths
         self.results_listbox = tk.Listbox(
             self.outer_frame,
-            font=("Segoe UI", max(10, int(11 * self.scale))),
+            font=("Segoe UI", max(9, int(10 * self.scale))),
             bg=self.BG_COLOR,
             fg=self.FG_COLOR,
             selectbackground=self.SEL_BG,
