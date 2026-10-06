@@ -28,47 +28,55 @@ class CSearchEngine(SearchEngine):
         #create the in-memory C index
         self._idx = self.dll.index_create(1024)
 
-        #crwal start menu for installed apps!
-        self._crawl_system_apps()
+        # Crawl Start Menus, Desktop, and user directories into RAM!
+        self._crawl_locations()
     
     def _setup_c_signatures(self):
         """Define C function arguments and return types for type safety"""
 
-        #SearchIndex *index_create(size_t initial_capacity)
+        # SearchIndex *index_create(size_t initial_capacity)
         self.dll.index_create.argtypes = [ctypes.c_size_t]
         self.dll.index_create.restype = ctypes.c_void_p
 
-        #void index_free(SearchIndex *idx)
+        # void index_free(SearchIndex *idx)
         self.dll.index_free.argtypes = [ctypes.c_void_p]
         self.dll.index_free.restype = None
 
-        #int index_add(SearchIndex *idx, const char *title, const char *path, const char *category)
+        # int index_add(SearchIndex *idx, const char *title, const char *path, const char *category)
         self.dll.index_add.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
         self.dll.index_add.restype = ctypes.c_int
 
-        #int index_search(const SearchIndex *idx, const char *query, SearchEntry *results, int max_results)
+        # int index_search(const SearchIndex *idx, const char *query, SearchEntry *results, int max_results)
         self.dll.index_search.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.POINTER(SearchEntryC), ctypes.c_int]
         self.dll.index_search.restype = ctypes.c_int
 
-        #int crawl_directory(SearchIndex *idx, const char *dir_path, int max_depth)
+        # int crawl_directory(SearchIndex *idx, const char *dir_path, int max_depth)
         self.dll.crawl_directory.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
         self.dll.crawl_directory.restype = ctypes.c_int
 
-    def _crawl_system_apps(self):
-        "crawl windows start menu folders where apps are there"
-        start_menus = [
-            #global start menu (all users)
-            r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs",
-            # User Start Menu (Current User)
-            os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs"),
+    def _crawl_locations(self):
+        """Crawls Windows Start Menus, Desktop, and common user folders into RAM."""
+        locations = [
+            # 1. Start Menus (Installed Apps)
+            (r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs", 3),
+            (os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs"), 3),
+
+            # 2. Desktops (User & Public)
+            (os.path.expandvars(r"%USERPROFILE%\Desktop"), 2),
+            (r"C:\Users\Public\Desktop", 2),
+
+            # 3. User Folders (Documents & Downloads)
+            (os.path.expandvars(r"%USERPROFILE%\Documents"), 2),
+            (os.path.expandvars(r"%USERPROFILE%\Downloads"), 1),
         ]
+
         total = 0
-        for folder in start_menus:
+        for folder, depth in locations:
             if os.path.exists(folder):
-                added = self.dll.crawl_directory(self._idx, folder.encode("utf-8"), 3)
+                added = self.dll.crawl_directory(self._idx, folder.encode("utf-8"), depth)
                 total += added
 
-        print(f" C search engine indexed {total} Windows app in RAM")
+        print(f"⚡ C search engine indexed {total} items into RAM!")
 
     def search(self, query:str, limit:int = 8) -> List[SearchResult]:
         if not self._idx:
