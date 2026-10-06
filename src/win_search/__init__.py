@@ -4,7 +4,8 @@ import signal
 import ctypes
 import tkinter as tk
 from .search_interface import SearchEngine
-from .mock_search import MockSearchEngine
+# from .mock_search import MockSearchEngine
+from .c_search import CSearchEngine
 from .ui import SearchUI
 from .hotkey import HotkeyManager
 
@@ -39,7 +40,8 @@ def main() -> None:
     root.after(200, check_signals)
 
     # 3. Initialize backend (starts with mock, we will replace this with C engine!)
-    search_engine: SearchEngine = MockSearchEngine()
+    # search_engine: SearchEngine = MockSearchEngine()
+    search_engine: SearchEngine = CSearchEngine()
 
     # 4. Initialize UI
     ui = SearchUI(root, search_engine)
