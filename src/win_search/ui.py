@@ -53,6 +53,7 @@ class SearchUI:
         self.scale = self._get_dpi_scale()
         self.root.overrideredirect(True)          # Frameless (no titlebar/borders)
         self.root.attributes("-topmost", True)     # Float above all windows
+        self.root.attributes("-alpha", 0.94)       # Sleek semi-transparency (0.0 invisible, 1.0 opaque)
         self.root.configure(bg=self.BG_COLOR)
 
         self.width = int(1050 * self.scale)
