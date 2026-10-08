@@ -55,18 +55,22 @@ class SearchUI:
         self.root.attributes("-topmost", True)     # Float above all windows
         self.root.configure(bg=self.BG_COLOR)
 
-        # Scaled geometry: wider (1050px base) to display full paths comfortably
-        width = int(1050 * self.scale)
-        height = int(470 * self.scale)
+        self.width = int(1050 * self.scale)
+        self.compact_height = int(70 * self.scale)
+        self.expanded_height = int(470 * self.scale)
+
         screen_w = self.root.winfo_screenwidth()
         screen_h = self.root.winfo_screenheight()
-        x = (screen_w - width) // 2
-        y = int(screen_h * 0.18)
-        self.root.geometry(f"{width}x{height}+{x}+{y}")
+        self.win_x = (screen_w - self.width) // 2
+        self.win_y = int(screen_h * 0.18)
+
+        # Start in compact single-bar mode
+        self.is_expanded = False
+        self.root.geometry(f"{self.width}x{self.compact_height}+{self.win_x}+{self.win_y}")
 
     def _create_widgets(self) -> None:
-        pad_x = int(14 * self.scale)
-        pad_y = int(12 * self.scale)
+        self.pad_x = int(14 * self.scale)
+        self.pad_y = int(10 * self.scale)
         border_w = max(2, int(2 * self.scale))
 
         # Outer Border Frame
@@ -79,8 +83,8 @@ class SearchUI:
         self.outer_frame.pack(fill=tk.BOTH, expand=True)
 
         # Search Input Container
-        search_container = tk.Frame(self.outer_frame, bg=self.INPUT_BG, padx=pad_x, pady=int(8 * self.scale))
-        search_container.pack(fill=tk.X, padx=pad_x, pady=(pad_y, int(6 * self.scale)))
+        search_container = tk.Frame(self.outer_frame, bg=self.INPUT_BG, padx=self.pad_x, pady=int(8 * self.scale))
+        search_container.pack(fill=tk.X, padx=self.pad_x, pady=self.pad_y)
 
         # Search Icon Label
         self.icon_label = tk.Label(
@@ -108,11 +112,10 @@ class SearchUI:
         )
         self.entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # Divider line
-        divider = tk.Frame(self.outer_frame, bg=self.BORDER_COLOR, height=1)
-        divider.pack(fill=tk.X, padx=pad_x, pady=int(6 * self.scale))
+        # Divider line (packed dynamically when expanded)
+        self.divider = tk.Frame(self.outer_frame, bg=self.BORDER_COLOR, height=1)
 
-        # Results Listbox: refined compact font for displaying long paths
+        # Results Listbox (packed dynamically when expanded)
         self.results_listbox = tk.Listbox(
             self.outer_frame,
             font=("Segoe UI", max(9, int(10 * self.scale))),
@@ -126,20 +129,35 @@ class SearchUI:
             highlightthickness=0,
             activestyle="none"
         )
-        self.results_listbox.pack(fill=tk.BOTH, expand=True, padx=pad_x, pady=(0, int(6 * self.scale)))
 
-        # Bottom Hint Bar
-        hint_bar = tk.Frame(self.outer_frame, bg=self.BG_COLOR, padx=pad_x, pady=int(6 * self.scale))
-        hint_bar.pack(fill=tk.X, side=tk.BOTTOM)
+        # Bottom Hint Bar (packed dynamically when expanded)
+        self.hint_bar = tk.Frame(self.outer_frame, bg=self.BG_COLOR, padx=self.pad_x, pady=int(6 * self.scale))
 
         hint_label = tk.Label(
-            hint_bar,
+            self.hint_bar,
             text="↑ / ↓ navigate   •   ↵ launch   •   esc dismiss",
             font=("Segoe UI", max(8, int(9 * self.scale))),
             bg=self.BG_COLOR,
             fg=self.MUTED_COLOR
         )
         hint_label.pack(side=tk.RIGHT)
+
+    def _set_expanded(self, expand: bool) -> None:
+        """Expands window to show results or collapses to a single search bar."""
+        if self.is_expanded == expand:
+            return
+        self.is_expanded = expand
+
+        if expand:
+            self.root.geometry(f"{self.width}x{self.expanded_height}+{self.win_x}+{self.win_y}")
+            self.divider.pack(fill=tk.X, padx=self.pad_x, pady=int(6 * self.scale))
+            self.hint_bar.pack(fill=tk.X, side=tk.BOTTOM, padx=self.pad_x, pady=int(6 * self.scale))
+            self.results_listbox.pack(fill=tk.BOTH, expand=True, padx=self.pad_x, pady=(0, int(6 * self.scale)))
+        else:
+            self.results_listbox.pack_forget()
+            self.divider.pack_forget()
+            self.hint_bar.pack_forget()
+            self.root.geometry(f"{self.width}x{self.compact_height}+{self.win_x}+{self.win_y}")
 
     def _bind_events(self) -> None:
         # Virtual event for thread-safe hotkey toggle
@@ -161,16 +179,28 @@ class SearchUI:
         self._update_results(query)
 
     def _update_results(self, query: str) -> None:
-        self.current_results = self.search_engine.search(query, limit=7)
+        trimmed = query.strip()
+        if not trimmed:
+            self.current_results = []
+            self.results_listbox.delete(0, tk.END)
+            self._set_expanded(False)
+            return
+
+        self.current_results = self.search_engine.search(trimmed, limit=7)
         self.results_listbox.delete(0, tk.END)
 
+        if not self.current_results:
+            self._set_expanded(False)
+            return
+
+        self._set_expanded(True)
         for res in self.current_results:
             self.results_listbox.insert(tk.END, f"  {res.display_text()}")
 
-        if self.current_results:
-            self.results_listbox.selection_clear(0, tk.END)
-            self.results_listbox.selection_set(0)
-            self.results_listbox.activate(0)
+        self.results_listbox.selection_clear(0, tk.END)
+        self.results_listbox.selection_set(0)
+        self.results_listbox.activate(0)
+
 
     def _on_arrow_down(self, event) -> str:
         count = self.results_listbox.size()
@@ -233,6 +263,7 @@ class SearchUI:
     def hide(self) -> None:
         self.root.withdraw()
         self.is_visible = False
+        self.query_var.set("")
 
     def toggle(self) -> None:
         if self.is_visible:
