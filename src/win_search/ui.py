@@ -26,6 +26,7 @@ class SearchUI:
         self.SEL_BG = "#45475a"
         self.SEL_FG = "#ffffff"
         self.BORDER_COLOR = "#313244"
+        self.FONT_FAMILY = "JetBrains Mono"
 
         self._configure_window()
         self._create_widgets()
@@ -56,7 +57,7 @@ class SearchUI:
         self.root.attributes("-alpha", 0.94)       # Sleek semi-transparency (0.0 invisible, 1.0 opaque)
         self.root.configure(bg=self.BG_COLOR)
 
-        self.width = int(1050 * self.scale)
+        self.width = int(1180 * self.scale)
         self.compact_height = int(70 * self.scale)
         self.expanded_height = int(470 * self.scale)
 
@@ -104,7 +105,7 @@ class SearchUI:
         self.entry = tk.Entry(
             search_container,
             textvariable=self.query_var,
-            font=("Segoe UI", max(12, int(13 * self.scale))),
+            font=(self.FONT_FAMILY, max(12, int(13 * self.scale))),
             bg=self.INPUT_BG,
             fg=self.FG_COLOR,
             insertbackground=self.ACCENT_COLOR,
@@ -119,7 +120,7 @@ class SearchUI:
         # Results Listbox (packed dynamically when expanded)
         self.results_listbox = tk.Listbox(
             self.outer_frame,
-            font=("Segoe UI", max(9, int(10 * self.scale))),
+            font=(self.FONT_FAMILY, max(9, int(10 * self.scale))),
             bg=self.BG_COLOR,
             fg=self.FG_COLOR,
             selectbackground=self.SEL_BG,
@@ -136,8 +137,8 @@ class SearchUI:
 
         hint_label = tk.Label(
             self.hint_bar,
-            text="↑ / ↓ navigate   •   ↵ launch   •   esc dismiss",
-            font=("Segoe UI", max(8, int(9 * self.scale))),
+            text="↑↓ nav   •   ↵ open   •   ctrl+↵ explorer   •   ctrl+shift+↵ admin   •   esc close",
+            font=(self.FONT_FAMILY, max(7, int(8 * self.scale))),
             bg=self.BG_COLOR,
             fg=self.MUTED_COLOR
         )
@@ -171,6 +172,8 @@ class SearchUI:
         self.entry.bind("<Down>", self._on_arrow_down)
         self.entry.bind("<Up>", self._on_arrow_up)
         self.entry.bind("<Return>", self._on_enter_pressed)
+        self.entry.bind("<Control-Return>", self._on_ctrl_enter)
+        self.entry.bind("<Control-Shift-Return>", self._on_ctrl_shift_enter)
 
         # Double click on item launches it
         self.results_listbox.bind("<Double-Button-1>", lambda e: self.launch_selected())
@@ -235,6 +238,14 @@ class SearchUI:
         self.launch_selected()
         return "break"
 
+    def _on_ctrl_enter(self, event) -> str:
+        self.reveal_selected()
+        return "break"
+
+    def _on_ctrl_shift_enter(self, event) -> str:
+        self.launch_selected_admin()
+        return "break"
+
     def launch_selected(self) -> None:
         selected = self.results_listbox.curselection()
         if not selected or selected[0] >= len(self.current_results):
@@ -252,6 +263,53 @@ class SearchUI:
                 subprocess.Popen(["xdg-open", item.path])
         except Exception as e:
             print(f"Error launching '{item.path}': {e}")
+
+    def reveal_selected(self) -> None:
+        """Opens File Explorer with the selected item highlighted."""
+        selected = self.results_listbox.curselection()
+        if not selected or selected[0] >= len(self.current_results):
+            return
+
+        item = self.current_results[selected[0]]
+        self.hide()
+
+        try:
+            if item.path.startswith("shell:"):
+                if hasattr(os, "startfile"):
+                    os.startfile(item.path)
+                return
+
+            if sys.platform == "win32":
+                normalized = os.path.normpath(item.path)
+                if os.path.exists(normalized):
+                    # Passing as a formatted string prevents Python from quoting '/select,'
+                    subprocess.Popen(f'explorer.exe /select,"{normalized}"')
+                else:
+                    parent = os.path.dirname(normalized)
+                    if os.path.exists(parent):
+                        subprocess.Popen(f'explorer.exe "{parent}"')
+            else:
+                parent = os.path.dirname(item.path)
+                subprocess.Popen(["xdg-open", parent])
+        except Exception as e:
+            print(f"Error revealing '{item.path}': {e}")
+
+    def launch_selected_admin(self) -> None:
+        """Launches the selected application with elevated Administrator privileges."""
+        selected = self.results_listbox.curselection()
+        if not selected or selected[0] >= len(self.current_results):
+            return
+
+        item = self.current_results[selected[0]]
+        self.hide()
+
+        try:
+            if sys.platform == "win32":
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", item.path, None, None, 1)
+            else:
+                subprocess.Popen(["sudo", item.path])
+        except Exception as e:
+            print(f"Error launching as admin '{item.path}': {e}")
 
     def show(self) -> None:
         self.root.deiconify()
