@@ -54,14 +54,14 @@ def main() -> None:
             pass
 
     # 6. Start global hotkey listener (<alt>+<space>)
-    hotkey = HotkeyManager("<alt>+<space>", on_hotkey_pressed)
+    hotkey = HotkeyManager("<ctrl>+<space>", on_hotkey_pressed)
     hotkey.start()
 
     # 7. Start with the launcher visible so you can test it right away
     ui.show()
 
     print("🚀 Win-Search is running!")
-    print("👉 Press <Alt>+<Space> globally to toggle the launcher.")
+    print("👉 Press <Ctrl>+<Space> globally to toggle the launcher.")
     print("👉 Press <Escape> to dismiss.")
     print("👉 Press Ctrl+C in terminal to exit.")
 

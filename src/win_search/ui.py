@@ -256,6 +256,11 @@ class SearchUI:
     def show(self) -> None:
         self.root.deiconify()
         self.root.lift()
+        if sys.platform == "win32":
+            try:
+                ctypes.windll.user32.SetForegroundWindow(self.root.winfo_id())
+            except Exception:
+                pass
         self.root.focus_force()
         self.entry.focus_set()
         self.entry.select_range(0, tk.END)
