@@ -17,15 +17,15 @@ class SearchUI:
         self.is_visible = False
         self.current_results: List[SearchResult] = []
 
-        # Color Palette (Dark Theme / Catppuccin inspired)
-        self.BG_COLOR = "#1e1e2e"
-        self.INPUT_BG = "#2b2b3b"
-        self.FG_COLOR = "#cdd6f4"
-        self.MUTED_COLOR = "#a6adc8"
-        self.ACCENT_COLOR = "#89b4fa"
-        self.SEL_BG = "#45475a"
+        # Color Palette: Raycast / Obsidian Glass
+        self.BG_COLOR = "#0d0e12"
+        self.INPUT_BG = "#181920"
+        self.FG_COLOR = "#f1f2f6"
+        self.MUTED_COLOR = "#717488"
+        self.ACCENT_COLOR = "#ff6363"
+        self.SEL_BG = "#22242e"
         self.SEL_FG = "#ffffff"
-        self.BORDER_COLOR = "#313244"
+        self.BORDER_COLOR = "#2a2c38"
         self.FONT_FAMILY = "JetBrains Mono"
 
         self._configure_window()
