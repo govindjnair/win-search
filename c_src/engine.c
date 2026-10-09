@@ -172,3 +172,70 @@ int index_search(const SearchIndex *idx, const char *query,
 
   return final_count;
 }
+
+int index_save_file(const SearchIndex *idx, const char *filepath) {
+  if (!idx || !filepath) {
+    return -1;
+  }
+  // open file in binary write mode
+  FILE *fp = fopen(filepath, "wb");
+  if (!fp) {
+    return -1;
+  }
+  // write 4 byte magic signature
+  const char magic[4] = "WSRC";
+  if (fwrite(magic, 1, 4, fp) != 4) {
+    fclose(fp);
+    return -1;
+  }
+  // write the count of entries
+  if (fwrite(&idx->count, sizeof(size_t), 1, fp) != 1) {
+    fclose(fp);
+    return -1;
+  }
+  // dump all entries from memory to disk
+  if (idx->count > 0) {
+    size_t written = fwrite(idx->entries, sizeof(SearchEntry), idx->count, fp);
+    if (written != idx->count) {
+      fclose(fp);
+      return -1;
+    }
+  }
+  fclose(fp);
+  return 0;
+}
+
+SearchIndex *index_load_file(const char *filepath) {
+  if (!filepath) {
+    return NULL;
+  }
+  // open in binary read mode
+  FILE *fp = fopen(filepath, "rb");
+  if (!fp) {
+    return NULL; // file doesn't exist yet, like first launch
+  }
+  char magic[4];
+  if (fread(magic, 1, 4, fp) != 4 || memcmp(magic, "WSRC", 4) != 0) {
+    fclose(fp);
+    return NULL; // corrupted file
+  }
+  // read the count of entries
+  size_t count = 0;
+  if (fread(&count, sizeof(size_t), 1, fp) != 1) {
+    fclose(fp);
+    return NULL;
+  }
+  // allocate searchindex in ram with exact capacity
+  SearchIndex *idx = index_create(count > 0 ? count : 128);
+  if (!idx) {
+    fclose(fp);
+    return NULL;
+  }
+  // read all entries in 1 shot directly into our RAM array
+  if (count > 0) {
+    size_t read_count = fread(idx->entries, sizeof(SearchEntry), count, fp);
+    idx->count = read_count;
+  }
+  fclose(fp);
+  return idx;
+}

@@ -27,4 +27,7 @@ void index_free(SearchIndex *idx);
 int index_search(const SearchIndex *idx, const char *query,
                  SearchEntry *results, int max_results);
 
+int index_save_file(const SearchIndex *idx, const char *filepath);
+SearchIndex *index_load_file(const char *filepath);
+
 #endif // ENGINE_H
