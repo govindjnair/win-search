@@ -1,5 +1,6 @@
 
 import os
+import sys
 import threading
 import ctypes
 from pathlib import Path
@@ -17,8 +18,17 @@ class SearchEntryC(ctypes.Structure):
 
 class CSearchEngine(SearchEngine):
     def __init__(self):
-        #locate our search_engine.dll in the project root
-        dll_path = Path(__file__).resolve().parents[2]/"search_engine.dll"
+        # Locate search_engine.dll and cache file (supports dev and PyInstaller frozen app)
+        if getattr(sys, "frozen", False):
+            base_dir = getattr(sys, "_MEIPASS", Path(sys.executable).parent)
+            cache_dir = Path(os.path.expandvars(r"%LOCALAPPDATA%\win_search"))
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            self._cache_file = cache_dir / "search_index.bin"
+        else:
+            base_dir = Path(__file__).resolve().parents[2]
+            self._cache_file = base_dir / "search_index.bin"
+
+        dll_path = Path(base_dir) / "search_engine.dll"
         if not dll_path.exists():
             raise FileNotFoundError(f"Could not find DLL at: {dll_path}")
         
@@ -27,7 +37,6 @@ class CSearchEngine(SearchEngine):
         self._setup_c_signatures()
 
         self._lock = threading.Lock()
-        self._cache_file = Path(__file__).resolve().parents[2]/"search_index.bin"
         self._idx = None
 
         cache_path_bytes = str(self._cache_file).encode("utf-8")

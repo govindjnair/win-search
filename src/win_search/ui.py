@@ -17,6 +17,8 @@ class SearchUI:
         self.is_visible = False
         self.current_results: List[SearchResult] = []
 
+        self._load_bundled_font()
+
         # Color Palette: Raycast / Obsidian Glass
         self.BG_COLOR = "#0d0e12"
         self.INPUT_BG = "#181920"
@@ -31,6 +33,22 @@ class SearchUI:
         self._configure_window()
         self._create_widgets()
         self._bind_events()
+
+    def _load_bundled_font(self) -> None:
+        """Loads bundled JetBrains Mono into process memory via Win32 GDI."""
+        if sys.platform != "win32":
+            return
+        try:
+            from pathlib import Path
+            if getattr(sys, "frozen", False):
+                base_dir = getattr(sys, "_MEIPASS", Path(sys.executable).parent)
+            else:
+                base_dir = Path(__file__).resolve().parents[2]
+            font_path = Path(base_dir) / "assets" / "JetBrainsMono-Regular.ttf"
+            if font_path.exists():
+                ctypes.windll.gdi32.AddFontResourceExW(str(font_path), 0x10, 0)
+        except Exception:
+            pass
 
         # Initial search with empty query to preload defaults
         self._update_results("")
