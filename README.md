@@ -173,7 +173,7 @@ uv run win-search
 ### 3. Package Standalone Binary (`win-search.exe`)
 From Windows PowerShell:
 ```powershell
-uv run pyinstaller --noconsole --onefile --add-binary "search_engine.dll;." --add-data "assets/JetBrainsMono-Regular.ttf;assets" --name win-search run.py
+uv run pyinstaller --noconsole --onefile --icon "assets/app_icon.ico" --add-binary "search_engine.dll;." --add-data "assets;assets" --name win-search run.py
 ```
 
 The compiled binary is output to `dist/win-search.exe`. This standalone executable is what gets packaged for GitHub Releases.

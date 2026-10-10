@@ -88,6 +88,19 @@ class SearchUI:
         self.is_expanded = False
         self.root.geometry(f"{self.width}x{self.compact_height}+{self.win_x}+{self.win_y}")
 
+        # Set taskbar and window icon
+        try:
+            from pathlib import Path
+            if getattr(sys, "frozen", False):
+                base_dir = getattr(sys, "_MEIPASS", Path(sys.executable).parent)
+            else:
+                base_dir = Path(__file__).resolve().parents[2]
+            icon_path = Path(base_dir) / "assets" / "app_icon.ico"
+            if icon_path.exists():
+                self.root.iconbitmap(str(icon_path))
+        except Exception:
+            pass
+
     def _create_widgets(self) -> None:
         self.pad_x = int(14 * self.scale)
         self.pad_y = int(10 * self.scale)

@@ -4,14 +4,31 @@ import pystray
 from pystray import MenuItem as item
 
 def create_tray_image() -> Image.Image:
-    """Draws a clean 64x64 search lens in RAM matching our Raycast accent color (#ff6363)."""
-    image = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    # Magnifying lens circle
-    draw.ellipse((10, 10, 42, 42), outline="#ff6363", width=6)
-    # Lens handle
-    draw.line((35, 35, 52, 52), fill="#ff6363", width=7)
-    return image
+    """Loads bundled tray_icon.png if available, or renders a bold in-memory glyph."""
+    try:
+        import sys
+        from pathlib import Path
+        if getattr(sys, "frozen", False):
+            base_dir = getattr(sys, "_MEIPASS", Path(sys.executable).parent)
+        else:
+            base_dir = Path(__file__).resolve().parents[2]
+        icon_path = Path(base_dir) / "assets" / "tray_icon.png"
+        if icon_path.exists():
+            return Image.open(str(icon_path))
+    except Exception:
+        pass
+
+    # High-quality supersampled fallback glyph filling the 64x64 canvas
+    s = 256
+    img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    coral = (255, 99, 99, 255)
+    cx, cy = s * 0.40, s * 0.40
+    r = s * 0.28
+    lw = int(s * 0.08)
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=coral, width=lw)
+    draw.line([(cx + r * 0.70, cy + r * 0.70), (cx + r * 1.85, cy + r * 1.85)], fill=coral, width=int(lw * 1.15))
+    return img.resize((64, 64), Image.Resampling.LANCZOS)
 
 class TrayIcon:
     """
