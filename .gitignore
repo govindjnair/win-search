@@ -13,6 +13,7 @@ __pycache__/
 .venv/
 env/
 venv/
+.python-version
 
 # Unit test / coverage reports
 .coverage
@@ -28,6 +29,9 @@ htmlcov/
 *.obj
 
 # Libraries
+*.dll
+*.so
+*.dylib
 *.lib
 *.a
 *.la
@@ -60,3 +64,16 @@ Makefile
 *~
 *.swp
 *.swo
+
+# --- Packaging & App Cache ---
+build/
+dist/
+*.spec
+search_index.bin
+
+# Test binaries
+test_crawler
+test_engine
+
+# IDE
+.vscode/
