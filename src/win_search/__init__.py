@@ -8,6 +8,7 @@ from .search_interface import SearchEngine
 from .c_search import CSearchEngine
 from .ui import SearchUI
 from .hotkey import HotkeyManager
+from .tray import TrayIcon
 
 def enable_high_dpi_awareness() -> None:
     """Make Tkinter crisp and sharp on Windows high-DPI displays."""
@@ -33,6 +34,10 @@ def main() -> None:
         root.after(200, check_signals)
 
     def handle_sigint(*args) -> None:
+        try:
+            tray.stop()
+        except Exception:
+            pass
         root.destroy()
         sys.exit(0)
 
@@ -53,16 +58,30 @@ def main() -> None:
         except Exception:
             pass
 
-    # 6. Start global hotkey listener (<alt>+<space>)
+    # 6. Start global hotkey listener (<ctrl>+<space>)
     hotkey = HotkeyManager("<ctrl>+<space>", on_hotkey_pressed)
     hotkey.start()
 
-    # 7. Start with the launcher visible so you can test it right away
+    # 7. Start System Tray icon
+    def on_tray_show() -> None:
+        root.after(0, ui.show)
+
+    def on_tray_refresh() -> None:
+        search_engine._start_background_refresh()
+
+    def on_tray_exit() -> None:
+        root.after(0, root.destroy)
+
+    tray = TrayIcon(on_tray_show, on_tray_refresh, on_tray_exit)
+    tray.start()
+
+    # 8. Start with the launcher visible so you can test it right away
     ui.show()
 
     print("🚀 Win-Search is running!")
     print("👉 Press <Ctrl>+<Space> globally to toggle the launcher.")
     print("👉 Press <Escape> to dismiss.")
+    print("👉 Check the System Tray (near clock) to access the menu or exit.")
     print("👉 Press Ctrl+C in terminal to exit.")
 
     try:
@@ -71,6 +90,7 @@ def main() -> None:
         pass
     finally:
         hotkey.stop()
+        tray.stop()
 
 if __name__ == "__main__":
     main()
