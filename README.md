@@ -129,7 +129,8 @@ Filesystem and application crawling can take several seconds. To prevent UI lock
 
 ### 5. Win32 Platform Integration
 
-- **`SetForegroundWindow`:** Bypasses Windows focus stealing prevention to ensure immediate keyboard focus when summoned via hotkey.
+- **`CreateMutexW` & `CreateEventW`:** Enforces single-instance execution. If a secondary instance is launched, it signals the primary instance to wake up and display the search bar, then terminates silently in < 3 ms.
+- **`SetForegroundWindow`:** Bypasses Windows focus stealing prevention to ensure immediate keyboard focus when summoned via hotkey or second launch.
 - **`Shell_NotifyIconW`:** Maintains a persistent background presence in the Windows notification area (`pystray`).
 - **`CREATE_NO_WINDOW`:** Suppresses terminal flash when querying installed UWP packages via background PowerShell (`Get-StartApps`).
 - **`ShellExecuteW`:** Launches selected binaries with UAC elevation via the `runas` verb on demand.

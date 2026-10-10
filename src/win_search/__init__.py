@@ -9,6 +9,7 @@ from .c_search import CSearchEngine
 from .ui import SearchUI
 from .hotkey import HotkeyManager
 from .tray import TrayIcon
+from .single_instance import SingleInstanceManager
 
 def enable_high_dpi_awareness() -> None:
     """Make Tkinter crisp and sharp on Windows high-DPI displays."""
@@ -24,6 +25,10 @@ def enable_high_dpi_awareness() -> None:
                 pass
 
 def main() -> None:
+    # 0. Single-instance enforcement: wake running instance if launched again
+    single_instance = SingleInstanceManager()
+    single_instance.check_or_wake_existing()
+
     # 1. Enable crisp rendering before creating the Tk instance
     enable_high_dpi_awareness()
 
@@ -36,6 +41,10 @@ def main() -> None:
     def handle_sigint(*args) -> None:
         try:
             tray.stop()
+        except Exception:
+            pass
+        try:
+            single_instance.cleanup()
         except Exception:
             pass
         root.destroy()
@@ -51,18 +60,21 @@ def main() -> None:
     # 4. Initialize UI
     ui = SearchUI(root, search_engine)
 
-    # 5. Thread-safe hotkey callback: posts a virtual event into Tkinter's queue
+    # 5. Listen for wake-up events from secondary instances
+    single_instance.start_wake_listener(lambda: root.after(0, ui.show))
+
+    # 6. Thread-safe hotkey callback: posts a virtual event into Tkinter's queue
     def on_hotkey_pressed() -> None:
         try:
             root.event_generate("<<ToggleLauncher>>", when="tail")
         except Exception:
             pass
 
-    # 6. Start global hotkey listener (<ctrl>+<space>)
+    # 7. Start global hotkey listener (<ctrl>+<space>)
     hotkey = HotkeyManager("<ctrl>+<space>", on_hotkey_pressed)
     hotkey.start()
 
-    # 7. Start System Tray icon
+    # 8. Start System Tray icon
     def on_tray_show() -> None:
         root.after(0, ui.show)
 
@@ -75,7 +87,7 @@ def main() -> None:
     tray = TrayIcon(on_tray_show, on_tray_refresh, on_tray_exit)
     tray.start()
 
-    # 8. Start with the launcher visible so you can test it right away
+    # 9. Start with the launcher visible so you can test it right away
     ui.show()
 
     print("🚀 Win-Search is running!")
@@ -91,6 +103,7 @@ def main() -> None:
     finally:
         hotkey.stop()
         tray.stop()
+        single_instance.cleanup()
 
 if __name__ == "__main__":
     main()
