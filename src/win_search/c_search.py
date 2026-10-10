@@ -2,6 +2,8 @@
 import os
 import sys
 import threading
+import json
+import subprocess
 import ctypes
 from pathlib import Path
 from typing import List
@@ -101,10 +103,16 @@ class CSearchEngine(SearchEngine):
         """Indexes Microsoft Store and UWP packaged apps (Calculator, WhatsApp, Settings, etc.)"""
         idx = target_idx or self._idx
         try:
-            import subprocess
-            import json
-            cmd = ["powershell", "-NoProfile", "-NonInteractive", "-Command", "Get-StartApps | Select-Object Name, AppID | ConvertTo-Json"]
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            cmd = [
+                "powershell",
+                "-NoProfile",
+                "-NonInteractive",
+                "-WindowStyle", "Hidden",
+                "-Command",
+                "Get-StartApps | Select-Object Name, AppID | ConvertTo-Json"
+            ]
+            flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5, creationflags=flags)
             if proc.returncode == 0 and proc.stdout.strip():
                 apps = json.loads(proc.stdout)
                 if isinstance(apps, dict):

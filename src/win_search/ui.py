@@ -34,6 +34,9 @@ class SearchUI:
         self._create_widgets()
         self._bind_events()
 
+        # Initial search with empty query to preload defaults
+        self._update_results("")
+
     def _load_bundled_font(self) -> None:
         """Loads bundled JetBrains Mono into process memory via Win32 GDI."""
         if sys.platform != "win32":
@@ -49,9 +52,6 @@ class SearchUI:
                 ctypes.windll.gdi32.AddFontResourceExW(str(font_path), 0x10, 0)
         except Exception:
             pass
-
-        # Initial search with empty query to preload defaults
-        self._update_results("")
 
     def _get_dpi_scale(self) -> float:
         if sys.platform == "win32":
