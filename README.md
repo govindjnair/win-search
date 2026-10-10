@@ -18,12 +18,12 @@ Verified via Windows Task Manager (idle and active search across 27,000+ indexed
 
 ---
 
-## Download (Release v1.0.0)
+## Download (Release v1.0.1)
 
-Pre-compiled standalone executables are available on the [GitHub Releases v1.0.0](https://github.com/govindjnair/win-search/releases/tag/v1.0.0) page.
+Pre-compiled standalone executables are available on the [GitHub Releases](https://github.com/govindjnair/win-search/releases/latest) page.
 
 No installation, Python runtime, or external compilers required:
-1. Download [**`win-search.exe`**](https://github.com/govindjnair/win-search/releases/download/v1.0.0/win-search.exe) (18.3 MB) from the [**v1.0.0 Release**](https://github.com/govindjnair/win-search/releases/tag/v1.0.0).
+1. Download [**`win-search.exe`**](https://github.com/govindjnair/win-search/releases/latest/download/win-search.exe) (18.3 MB) from the [**v1.0.1 Release**](https://github.com/govindjnair/win-search/releases/tag/v1.0.1).
 2. Double-click to launch. It runs quietly in the system tray.
 3. Press **`<Ctrl>+<Space>`** from anywhere in Windows to summon the search bar.
 
